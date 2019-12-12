@@ -11,3 +11,5 @@
 # python train.py --config config/collect_stochastic.xml --prediction-step 2 --branch 4,4 --decay 0.9 --alg VPN --log result/vpn2 ${@:1} 
 # python train.py --config config/collect_stochastic.xml --prediction-step 3 --branch 4,4,4 --decay 0.9 --alg VPN --log result/vpn3 ${@:1} 
 # python train.py --config config/collect_stochastic.xml --prediction-step 5 --branch 4,4,4,1,1 --decay 0.8 --alg VPN --log result/vpn5 ${@:1} 
+
+# python train.py -w 4 -ps 1 -e CartPole-v0 -m child

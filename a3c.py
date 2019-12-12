@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 import util
-from async import AsyncSolver
+from async_ import AsyncSolver
 import model
 
 class A3C(AsyncSolver):

@@ -177,7 +177,7 @@ def run():
             os.environ["TMUX"] = ""
         path = os.path.join(os.getcwd(), args.log)
         if os.path.exists(path):
-            key = raw_input("%s exists. Do you want to delete it? (y/n): " % path)
+            key = input("%s exists. Do you want to delete it? (y/n): " % path)
             if key != 'n':
                 os.system("rm -rf %s" % path)
                 os.system("\n".join(cmds))

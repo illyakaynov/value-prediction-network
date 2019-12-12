@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 import model
 import util
-from async import AsyncSolver
+from async_ import AsyncSolver
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

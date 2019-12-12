@@ -248,7 +248,7 @@ class AsyncSolver(object):
     
     def define_summary(self):
         tf.summary.scalar("model/lr", self.learning_rate)
-        tf.summary.image("model/state", self.env.tf_visualize(self.local_network.x), max_outputs=10)
+        # tf.summary.image("model/state", self.env.tf_visualize(self.local_network.x), max_outputs=10)
         tf.summary.scalar("gradient/grad_norm", tf.global_norm(self.grads))
         tf.summary.scalar("param/param_norm", tf.global_norm(self.local_network.var_list))
         for grad_var in self.grads_and_vars:

@@ -69,7 +69,11 @@ class RolloutMemory(object):
 class VPN(Q):
     def define_network(self, name):
         self.state_off = None
-        self.args.meta_dim = 0 if self.env.meta() is None else len(self.env.meta())
+        try:
+            self.args.meta_dim = self.env.meta()
+        except AttributeError:
+            self.args.meta_dim = 0
+
         m = eval("model." + name)(self.env.observation_space.shape, 
                 self.env.action_space.n, type='vpn', 
                 gamma=self.args.gamma, 
@@ -128,7 +132,10 @@ class VPN(Q):
         
         time = tf.shape(pi.x)[0]
         steps = tf.minimum(self.args.prediction_step, time)
-        self.rollout_num = tf.to_float(time * steps - steps * (steps - 1) / 2)
+
+        result = tf.cast(time * steps, dtype=tf.float32) - tf.cast(steps * (steps - 1) / 2, dtype=tf.float32)
+
+        self.rollout_num = result
         
         # reward/gamma/value prediction
         self.r_delta = util.lower_triangular(
