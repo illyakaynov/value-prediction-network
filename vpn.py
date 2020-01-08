@@ -70,7 +70,7 @@ class VPN(Q):
     def define_network(self, name):
         self.state_off = None
         try:
-            self.args.meta_dim = self.env.meta()
+            self.args.meta_dim = len(self.env.meta())
         except AttributeError:
             self.args.meta_dim = 0
 

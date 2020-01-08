@@ -1,15 +1,15 @@
 from PIL import Image
 import numpy as np
-# import universe
+import universe
 import gym
 from gym.spaces import Discrete
 import logging
 import copy
 from bs4 import BeautifulSoup
 import tensorflow as tf
-# logger = logging.getLogger(__name__)
-# logger.setLevel(logging.INFO)
-# universe.configure_logging()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+universe.configure_logging()
 
 BLOCK = 0
 AGENT = 1
@@ -455,5 +455,5 @@ class MazeSMDP(MazeEnv):
 
 
 if __name__ == '__main__':
-    config = open('config/collect_stochastic.xml').read()
+    config = open('config/collect_custom.xml').read()
     env = MazeSMDP(gamma=0.99, config=config)

@@ -169,7 +169,7 @@ def evaluate(env, network, num_play=3000, eps=0.0):
 
 def run_tester(args, server):
     env = new_env(args)
-    env.configure()
+    # env.configure()
     env.reset()
     env.max_history = args.eval_num
     if args.alg == 'A3C': 
