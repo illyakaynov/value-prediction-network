@@ -12,12 +12,17 @@ from vpn import VPN
 from envs import create_env
 import util
 import numpy as np
+import bs4
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 def new_env(args):
-    config = open(args.config) if args.config != "" else None
+    config = args.config
+    if isinstance(args.config, str):
+        config = open(args.config) if args.config != "" else None
+        config = bs4.BeautifulSoup(config, "lxml")
+
     env = create_env(args.env_id,
         str(args.task), 
         args.remotes,

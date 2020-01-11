@@ -276,7 +276,7 @@ class Maze(object):
 
 class MazeEnv(object):
     def __init__(self, config="", verbose=1):
-        self.config = BeautifulSoup(config, "lxml") 
+        self.config = config
         # map
         self.size = int(self.config.maze["size"])
         self.max_step = int(self.config.maze["time"])
