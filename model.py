@@ -387,7 +387,7 @@ class Model(object):
 
             idx = tf.squeeze(idx_list[0])
             self.q_deep = tf.squeeze(q_plan[0])
-            self.q_plan = tf.sparse_to_dense(idx, [self.n_actions], self.q_deep, 
+            self.q_plan = tf.sparse_to_dense(idx, [self.n_actions], self.q_deep,
                         default_value=-100, validate_indices=False)
 
             self.x_off = tf.placeholder(tf.float32, [None] + list(ob_space))
@@ -433,6 +433,7 @@ class Model(object):
             return sess.run([self.sample] + self.state_out, feed_dict)
         elif self.type == 'vpn':
             out = sess.run([self.q_plan] + self.state_out, feed_dict)
+            print(out)
             q = out[0]
             state_out = out[1:]
             act = np.zeros_like(q)

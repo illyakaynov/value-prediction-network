@@ -69,7 +69,8 @@ def evaluate(env, agent, num_play=3000, eps=0.0):
             if terminal:
                 break
 
-        stats.append({**params, 'score': env.reward_history[0]})
+        stats.append({**params, 'score': env.reward_history[0],
+                      'episode_length': env.length_history[0]})
         if env.reward_history[0] < 0:
             pass
     return stats

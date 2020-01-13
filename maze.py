@@ -136,6 +136,47 @@ def generate_maze_with_multiple_goal(size, num_goal=1, holes=3):
 
     return maze, agent_pos, object_pos
 
+def generate_static_maze(size=10, num_goal=1, holes=3):
+    custom_walls = [[1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+                    [1., 1., 0., 0., 0., 0., 0., 0., 0., 1.],
+                    [1., 0., 0., 1., 1., 0., 1., 1., 0., 1.],
+                    [1., 0., 1., 0., 0., 0., 1., 0., 0., 1.],
+                    [1., 0., 0., 1., 1., 0., 0., 1., 0., 1.],
+                    [1., 1., 0., 1., 0., 0., 1., 1., 0., 1.],
+                    [1., 0., 0., 0., 0., 1., 0., 0., 0., 1.],
+                    [1., 0., 1., 0., 1., 1., 1., 0., 0., 1.],
+                    [1., 0., 0., 0., 0., 0., 0., 0., 0., 1.],
+                    [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]]
+    custom_player = [[0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 1., 0., 0.],
+                     [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]]
+    custom_goal = [[0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 1., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]]
+
+    maze, start_y, start_x = generate_maze(size, holes=holes)
+    maze[..., 0] = np.asarray(custom_walls)
+    maze[..., 1] = np.asarray(custom_player)
+    maze[..., 2] = np.asarray(custom_goal)
+    object_pos = [[], [], [[1, 2], ], []]
+    agent_pos = [8, 7]
+
+    return maze, agent_pos, object_pos
+
 
 def visualize_maze(maze, img_size=320):
     my = maze.shape[0]
@@ -196,6 +237,9 @@ class Maze(object):
         self.maze, self.agent_pos, self.obj_pos = \
             generate_maze_with_multiple_goal(self.size, num_goal=self.num_goal,
                                              holes=self.holes)
+        # self.maze, self.agent_pos, self.obj_pos = \
+        #     generate_static_maze(self.size, num_goal=self.num_goal,
+        #                          holes=self.holes)
 
     def is_reachable(self, y, x):
         return self.maze[y][x][BLOCK] == 0
