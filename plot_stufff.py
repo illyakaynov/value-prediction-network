@@ -38,7 +38,10 @@ parser.add_argument('--branch', type=str, default="4,4,4", help="branching facto
 def evaluate(env, agent, num_play=3000, eps=0.0):
     # a = env.visualize()
     # a.show()
-    stats = {k: [] for k in {'score', 'runs'}}
+    stats = []
+    params = {'num_goals': env.config.object['num_goal'],
+              'branch': str(agent.branch),
+              'time': env.config.maze['time']}
     env.max_history = num_play
     for iter in range(0, num_play):
         last_state = env.reset()
@@ -60,13 +63,15 @@ def evaluate(env, agent, num_play=3000, eps=0.0):
                 features = []
 
             state, reward, terminal, info, _ = env.step(action.argmax())
-            stats['score'].append(reward)
             last_state = state
             last_features = features
             last_meta = env.meta()
             if terminal:
                 break
-    stats['score'] = env.reward_history
+
+        stats.append({**params, 'score': env.reward_history[0]})
+        if env.reward_history[0] < 0:
+            pass
     return stats
 
 
@@ -80,7 +85,8 @@ def run(envs=None):
 
     env = new_env(args)
     if envs is None:
-        envs=[env]
+        envs = [env]
+
     args.meta_dim = 0 if env.meta() is None else len(env.meta())
     device = '/gpu:0' if args.gpu > 0 else '/cpu:0'
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
@@ -116,38 +122,40 @@ def run(envs=None):
         stats = []
         for i, env in enumerate(envs):
             run_stats = evaluate(env, agent, args.n_play, eps=args.eps)
-            stats.append(run_stats)
-            envs[i] = MazeSMDP(config=env.config)
+            stats += run_stats
     return stats
 
+
 import copy
+
 if __name__ == "__main__":
     from maze import MazeSMDP
     from bs4 import BeautifulSoup
 
-    config = open('config/collect_deterministic.xml').read()
+    config = open('config/evaluation_config.xml').read()
     config = BeautifulSoup(config, "lxml")
-    values = list(range(1, 20))
+    values = list(range(1, 11))
 
     mazes = []
     for v in values:
         copy_config = copy.copy(config)
         copy_config.object['num_goal'] = v
         mazes.append(MazeSMDP(config=copy_config))
-
     stats = run(mazes)
 
-    scores = {v: d['score'] for v, d in zip(values, stats)}
     import pandas as pd
-    df = pd.DataFrame.from_dict(scores, orient='index')
-    n = pd.DataFrame()
-    n['num_goals'] = df.stack().index.levels[1]
-
     import seaborn as sns
-
     import matplotlib.pyplot as plt
 
-    sns.violinplot(x=values, y=scores)
+    df = pd.DataFrame(stats)
+    df.groupby(by=['num_goals', 'branch']).mean()
+    # ax = sns.violinplot(x='num_goals', y='score', data=df)
+    sns.lineplot(x="num_goals", y="score",
+                 err_style="bars", ci=68, data=df)
+
     plt.show()
 
-
+    g = sns.catplot(x="num_goals", y="score", palette="YlGnBu_d",
+                    # height=6, aspect=.75,
+                    kind="boxen", data=df)
+    plt.show()
