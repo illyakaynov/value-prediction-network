@@ -2,7 +2,7 @@ import os
 from os.path import join
 import pandas as pd
 
-path = './stats'
+path = './results'
 
 files = [f for f in os.listdir(path)]
 
@@ -24,19 +24,24 @@ to_plot = df[df['branch'].isin(
     [
         '[4]',
         # '[4, 4]',
-        # '[4, 4, 4]',
+        '[4, 4, 4]',
         # '[4, 4, 4, 4]',
-        '[4, 4, 4, 4, 4]',
+        # '[4, 4, 4, 4, 4]',
         '[4, 4, 4, 1, 1, 1]',
         # '[1, 1, 1, 1, 1, 1, 1, 4, 4, 4]',
         # '[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]',
         # '[1]',
         # '[1, 1, 1]',
-        # '[1, 1, 1, 4, 4, 4]',
-        # '[4, 4, 4, 1, 1, 1, 1, 1, 1, 1]'
+        '[1, 1, 1, 4, 4, 4]',
+        '[4, 4, 4, 1, 1, 1, 1, 1, 1, 1]'
 
     ])]
 
 sns.lineplot(x="num_goals", y="score", hue='branch',
              err_style="bars", data=to_plot)
+import numpy as np
+
+
+sns.scatterplot(x=np.arange(1, 11), y=np.arange(1, 11), marker='_',
+                color='red', label="best possible")
 plt.show()
