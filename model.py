@@ -433,7 +433,7 @@ class Model(object):
             return sess.run([self.sample] + self.state_out, feed_dict)
         elif self.type == 'vpn':
             out = sess.run([self.q_plan] + self.state_out, feed_dict)
-            print(out)
+            # print(out)
             q = out[0]
             state_out = out[1:]
             act = np.zeros_like(q)

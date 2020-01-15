@@ -40,7 +40,7 @@ def evaluate(env, agent, num_play=3000, eps=0.0):
     # a.show()
     stats = []
     params = {'num_goals': env.config.object['num_goal'],
-              'branch': str(agent.branch),
+              'branch_test': str(agent.branch),
               'time': env.config.maze['time'],
               'branch_train': agent.train_branch}
     env.max_history = num_play
@@ -101,28 +101,31 @@ def run(envs=None):
     branches = [
         [4, 4, 4],
         [4, 4, 4, 4],
+        [4, 4, 4, 4, 4],
         [4, 1, 4, 1, 4],
-        # [4, 4, 4, 4, 4],
-        # [1],
-        # [1, 1, 1],
-        # [1, 1, 1, 1, 1, 1],
-        # [1, 1, 1, 1, 1, 1, 1, 1, 1],
-        # [4, 4, 4, 1],
-        # [4, 4, 4, 1, 1],
-        # [4, 4, 4, 1, 1, 1],
-        # [1, 4, 4, 4],
-        # [1, 1, 1, 4, 4, 4],
-        # [1, 1, 1, 4, 4, 4],
+        [1],
+        [1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [4, 4, 4, 1],
+        [4, 4, 4, 1, 1],
+        [4, 4, 4, 1, 1, 1],
+        [1, 4, 4, 4],
+        [1, 1, 1, 4, 4, 4],
+        [1, 1, 1, 4, 4, 4],
     ]
     paths = [f'/home/ikaynov/Repositories/value-prediction-network/Experiments/{x}/best'
              for x in
              [
                  's10_t20_g8_444',
                  's10_t20_g8_4444',
-                 # 's10_t20_g8_44444',
+                 's10_t20_g8_44444',
              ]]
+    count = 0
+    count_max = len(paths) * len(branches)
     for ck in paths:
         for branch_type in branches:
+            print(f'Executing {count}/{count_max}.')
             config = tf.ConfigProto(device_filters=device,
                                     gpu_options=gpu_options,
                                     allow_soft_placement=True)
@@ -160,6 +163,7 @@ def run(envs=None):
                     for i, env in enumerate(envs):
                         run_stats = evaluate(env, agent, args.n_play, eps=args.eps)
                         stats += run_stats
+            count += 1
     return stats
 
 
@@ -199,11 +203,15 @@ if __name__ == "__main__":
     # g.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
     # fig.show()
     import plotly.express as px
+    from plotly import graph_objects as go
 
-    df.sort_values(by='branch', inplace=True, ascending=False)
-    fig = px.box(df, x="branch", y="score", points="outliers", notched=False, color='branch_train', )
+    df.sort_values(by=['branch_test', 'branch_train'], inplace=True, ascending=False)
+    fig = px.box(df, x="branch_test", y="score", points="outliers", notched=False, color='branch_train', )
     # fig.show()
 
     # format the layout
-    # fig.update_layout(yaxis=dict(range=[-1, 13]),),
+    fig.update_layout(
+        # yaxis=dict(range=[-2, 13]),
+    ),
+
     fig.show()
