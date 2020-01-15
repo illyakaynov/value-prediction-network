@@ -41,12 +41,15 @@ def evaluate(env, agent, num_play=3000, eps=0.0):
     stats = []
     params = {'num_goals': env.config.object['num_goal'],
               'branch': str(agent.branch),
-              'time': env.config.maze['time']}
+              'time': env.config.maze['time'],
+              'branch_train': agent.train_branch}
     env.max_history = num_play
     for iter in range(0, num_play):
         last_state = env.reset()
         last_features = agent.get_initial_features()
         last_meta = env.meta()
+        score = 0
+        step = 0
         while True:
             # import pdb; pdb.set_trace()
             if eps == 0.0 or np.random.rand() > eps:
@@ -69,14 +72,18 @@ def evaluate(env, agent, num_play=3000, eps=0.0):
             if terminal:
                 break
 
-        stats.append({**params, 'score': env.reward_history[0],
-                      'episode_length': env.length_history[0]})
+            score += reward
+            step += 1
+        stats.append({**params, 'score': score,
+                      'episode_length': step})
         if env.reward_history[0] < 0:
             pass
     return stats
 
 
 def run(envs=None):
+    stats = []
+
     args = parser.parse_args()
     args.task = 0
     args.f_num = util.parse_to_num(args.f_num)
@@ -85,45 +92,74 @@ def run(envs=None):
     args.branch = util.parse_to_num(args.branch)
 
     env = new_env(args)
-    if envs is None:
+    if envs is None or not envs:
         envs = [env]
 
     args.meta_dim = 0 if env.meta() is None else len(env.meta())
     device = '/gpu:0' if args.gpu > 0 else '/cpu:0'
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
-    config = tf.ConfigProto(device_filters=device,
-                            gpu_options=gpu_options,
-                            allow_soft_placement=True)
-    with tf.Session(config=config) as sess:
-        if args.alg == 'A3C':
-            model_type = 'policy'
-        elif args.alg == 'Q':
-            model_type = 'q'
-        elif args.alg == 'VPN':
-            model_type = 'vpn'
-        else:
-            raise ValueError('Invalid algorithm: ' + args.alg)
-        with tf.device(device):
-            with tf.variable_scope("local/learner"):
-                agent = eval("model." + args.model)(env.observation_space.shape,
-                                                    env.action_space.n, type=model_type,
-                                                    gamma=args.gamma,
-                                                    dim=args.dim,
-                                                    f_num=args.f_num,
-                                                    f_stride=args.f_stride,
-                                                    f_size=args.f_size,
-                                                    f_pad=args.f_pad,
-                                                    branch=args.branch,
-                                                    meta_dim=args.meta_dim)
-                print("Num parameters: %d" % agent.num_param)
+    branches = [
+        [4, 4, 4],
+        [4, 4, 4, 4],
+        [4, 1, 4, 1, 4],
+        # [4, 4, 4, 4, 4],
+        # [1],
+        # [1, 1, 1],
+        # [1, 1, 1, 1, 1, 1],
+        # [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        # [4, 4, 4, 1],
+        # [4, 4, 4, 1, 1],
+        # [4, 4, 4, 1, 1, 1],
+        # [1, 4, 4, 4],
+        # [1, 1, 1, 4, 4, 4],
+        # [1, 1, 1, 4, 4, 4],
+    ]
+    paths = [f'/home/ikaynov/Repositories/value-prediction-network/Experiments/{x}/best'
+             for x in
+             [
+                 's10_t20_g8_444',
+                 's10_t20_g8_4444',
+                 # 's10_t20_g8_44444',
+             ]]
+    for ck in paths:
+        for branch_type in branches:
+            config = tf.ConfigProto(device_filters=device,
+                                    gpu_options=gpu_options,
+                                    allow_soft_placement=True)
+            tf.reset_default_graph()
+            with tf.Session(config=config) as sess:
+                sess.run(tf.global_variables_initializer())
+                if args.alg == 'A3C':
+                    model_type = 'policy'
+                elif args.alg == 'Q':
+                    model_type = 'q'
+                elif args.alg == 'VPN':
+                    model_type = 'vpn'
+                else:
+                    raise ValueError('Invalid algorithm: ' + args.alg)
+                with tf.device(device):
 
-            saver = tf.train.Saver()
-            saver.restore(sess, args.checkpoint)
-        np.random.seed(args.seed)
-        stats = []
-        for i, env in enumerate(envs):
-            run_stats = evaluate(env, agent, args.n_play, eps=args.eps)
-            stats += run_stats
+                    # np.random.seed(args.seed)
+
+                    with tf.variable_scope("local/learner"):
+                        agent = eval("model." + args.model)(env.observation_space.shape,
+                                                            env.action_space.n, type=model_type,
+                                                            gamma=args.gamma,
+                                                            dim=args.dim,
+                                                            f_num=args.f_num,
+                                                            f_stride=args.f_stride,
+                                                            f_size=args.f_size,
+                                                            f_pad=args.f_pad,
+                                                            branch=branch_type,
+                                                            meta_dim=args.meta_dim)
+                        agent.train_branch = str([int(x) for x in list(ck.split('/')[-2].split('_')[-1])])
+                        print("Num parameters: %d" % agent.num_param)
+                    saver = tf.train.Saver()
+                    saver.restore(sess, ck)
+
+                    for i, env in enumerate(envs):
+                        run_stats = evaluate(env, agent, args.n_play, eps=args.eps)
+                        stats += run_stats
     return stats
 
 
@@ -133,15 +169,15 @@ if __name__ == "__main__":
     from maze import MazeSMDP
     from bs4 import BeautifulSoup
 
-    config = open('config/evaluation_config.xml').read()
+    config = open('config/collect_deterministic.xml').read()
     config = BeautifulSoup(config, "lxml")
     values = list(range(1, 11))
 
     mazes = []
-    for v in values:
-        copy_config = copy.copy(config)
-        copy_config.object['num_goal'] = v
-        mazes.append(MazeSMDP(config=copy_config))
+    # for v in values:
+    #     copy_config = copy.copy(config)
+    #     copy_config.object['num_goal'] = v
+    #     mazes.append(MazeSMDP(config=copy_config))
     stats = run(mazes)
 
     import pandas as pd
@@ -149,14 +185,25 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     df = pd.DataFrame(stats)
-    df.groupby(by=['num_goals', 'branch']).mean()
+    # df.groupby(by=['num_goals', 'branch']).mean()
     # ax = sns.violinplot(x='num_goals', y='score', data=df)
-    sns.lineplot(x="num_goals", y="score",
-                 err_style="bars", ci=68, data=df)
+    # sns.lineplot(x="num_goals", y="score",
+    #              err_style="bars", ci=68, data=df)
+    #
+    # plt.show()
+    # fig = plt.Figure(figsize=(10, 10))
+    # ax = fig.add_subplot()
+    # g = sns.catplot(x="branch", y="score", palette="YlGnBu_d",
+    #                  # height=6, aspect=.75,
+    #                  kind="boxen", data=df, ax=ax)
+    # g.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
+    # fig.show()
+    import plotly.express as px
 
-    plt.show()
+    df.sort_values(by='branch', inplace=True, ascending=False)
+    fig = px.box(df, x="branch", y="score", points="outliers", notched=False, color='branch_train', )
+    # fig.show()
 
-    g = sns.catplot(x="num_goals", y="score", palette="YlGnBu_d",
-                    # height=6, aspect=.75,
-                    kind="boxen", data=df)
-    plt.show()
+    # format the layout
+    # fig.update_layout(yaxis=dict(range=[-1, 13]),),
+    fig.show()
